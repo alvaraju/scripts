@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd /ws/alvaraju/testrepo
+
+repo create au -w /ws/alvaraju/testrepo/r
+
+cd r/code
