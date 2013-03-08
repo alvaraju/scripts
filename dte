@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+set -e
+# set -x
+
+TMPDIR=$(mktemp -d /tmp/example.XXXXXX) || \
+    { echo "Error creating temp dir"; exit 1; }
+TEST_REPO=test.repo
+GIT_HOOKS=/pnb/software/userrepos/cache/githooks
+PATCH=$@
+
+enable_prod_hooks()
+{
+  (
+    cd $TMPDIR/$TEST_REPO/.git
+    rm -rf hooks
+    ln -s $GIT_HOOKS/linux/hooks .
+    #git archive --format=tar --prefix=hooks/ \
+      #--remote $GIT_HOOKS HEAD | tar xf -
+  )
+}
+
+enable_dev_hooks()
+{
+  (
+    cd $TMPDIR/$TEST_REPO/.git
+    rm -rf hooks
+    ln -s $TMPDIR/githooks/linux/hooks .
+  )
+}
+
+(
+  #for P in "$@"
+  #do
+  #    echo "patch: $P"
+  #done
+  echo "--------------------------------------------------------"
+  echo "Preparing Testing Environment..."
+
+  cd $TMPDIR
+  echo "Testing path: $TMPDIR"
+  echo
+  echo "1. Copying Production Git Hooks..."
+  cp -r $GIT_HOOKS .
+
+  echo "2. Applying $PATCH..."
+#  sleep 1
+
+  (
+    cd $TMPDIR/githooks
+    git checkout -q master
+    git am $PATCH
+  )
+
+  echo "3. Creating $TEST_REPO repository..."
+  sleep 1
+  git init -q $TEST_REPO
+  enable_dev_hooks
+  #echo -n "4. Enabling Production Hooks..."
+  #sleep 1
+  #enable_prod_hooks
+
+  #(
+  #  cd $TMPDIR/$TEST_REPO
+
+  #  echo
+  #  echo "5. Running test with Production Hooks..."
+  #  sleep 1
+  #  git commit --allow-empty -m "Merge branch 'foo'"
+  #  echo "   ^^^^^^^^^^^^^^^^^^"
+  #  echo "   Note the actual behavior when you're committing a merge"
+  #  echo "   Git Hooks show a warning message."
+
+  #  echo
+  #  echo "6. Enabling Develop Hooks with patch applied..."
+  #  sleep 1
+
+  #  enable_dev_hooks
+  #  git commit --allow-empty -m "Merge branch 'foo'"
+  #  echo "   ^^^^^^^^^^^^^^^^^^"
+  #  echo "   Note just the commit message. No more warning."
+  #)
+)
+
+#echo
+#echo "Removing Testing Environment"
+#rm -rf $TMPDIR
+echo
+echo "Testing Environment Created in $TMPDIR!"
+echo "--------------------------------------------------------"

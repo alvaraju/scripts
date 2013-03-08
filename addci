@@ -1,3 +1,14 @@
 #!/bin/bash
 
+is_git=`find -name .git`
+if [ -d ".git"  ] 
+then
+  date=`date +%N`
+  echo "$date" > "$date"
+  git add "$date"
+  git commit -m "$date"
 
+else
+    echo "Error: this is not a git repository"
+    exit 1
+fi

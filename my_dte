@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -e
+# set -x
+
+TMPDIR=$(mktemp -d /tmp/example.XXXXXX) || \
+    { echo "Error creating temp dir"; exit 1; }
+TEST_REPO=test.repo
+MASTER_REPO=test.repo.git
+GIT_HOOKS=/ws/alvaraju/hpncode/essw/githooks
+PROD=/pnb/software/userrepos/cache/t5_code.git
+#PATCH=$@
+
+#enable_prod_hooks()
+#{
+#  (
+#    cd $TMPDIR/$TEST_REPO/.git
+#    rm -rf hooks
+#    ln -s $GIT_HOOKS/linux/hooks .
+#    #git archive --format=tar --prefix=hooks/ \
+#      #--remote $GIT_HOOKS HEAD | tar xf -
+#  )
+#}
+
+enable_dev_hooks()
+{
+    REPO=$1
+  (
+    cd $TMPDIR/$REPO/.git
+    rm -rf hooks
+    ln -s $TMPDIR/githooks/linux/hooks .
+  )
+}
+
+
+(
+  echo "--------------------------------------------------------"
+  echo "Preparing Testing Environment..."
+
+  cd $TMPDIR
+  echo "Testing path: $TMPDIR"
+  echo
+  echo "1. Copying modified Git Hooks..."
+  ln -s $GIT_HOOKS .
+
+  echo "2. Creating $TEST_REPO repository..."
+  git init -q $TEST_REPO
+  enable_dev_hooks $TEST_REPO
+)
+
+
+echo
+echo "Testing Environment Created in $TMPDIR!"
+echo "--------------------------------------------------------"

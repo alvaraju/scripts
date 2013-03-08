@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use LWP::Simple;
+
+my $url = 'http://qc2d.atlanta.hp.com:80/qcbin/rest/is-authenticated';
+
+my $response=get $url;
+
+die 'Error getting $url' unless defined $response;
+
+print $response;

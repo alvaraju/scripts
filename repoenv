@@ -1,0 +1,72 @@
+#!/bin/bash
+tr="/ws/alvaraju/testrepo"
+rem="remote"
+local="local"
+rm -rf "$tr/$rem" "$tr/$local"
+cd $tr
+mkdir "$rem"
+mkdir "$local"
+cd "$tr/$rem"
+mkdir code.git
+mkdir ghs.git
+mkdir -p restricted/code/mocana.git
+mkdir -p restricted/code/route.git
+mkdir rom.git
+mkdir tools.git
+mkdir .repo
+cd "$tr/$rem/code.git"
+git init --bare
+cd "$tr/$rem/ghs.git"
+git init --bare
+cd "$tr/$rem/restricted/code/mocana.git"
+git init --bare
+cd "$tr/$rem/restricted/code/route.git"
+git init --bare
+cd "$tr/$rem/rom.git"
+git init --bare
+cd "$tr/$rem/tools.git"
+git init --bare
+
+cd "$tr/$local"
+
+
+
+mkdir .repo
+echo "repos:
+    code:
+        url: $tr/$rem/code.git
+        ref: master
+        dir: code
+    mocana:
+        url: $tr/$rem/restricted/code/mocana.git
+        ref: master
+        dir: restricted/code/mocana.ss
+    route:
+        url: $tr/$rem/restricted/code/route.git
+        ref: master
+        dir: restricted/code/route.ss
+    tools:
+        url: $tr/$rem/tools.git
+        ref: master
+        dir: tools
+    rom:
+        url: $tr/$rem/rom.git
+        ref: master
+        dir: rom
+    ghs:
+        url: $tr/$rem/ghs.git
+        ref: master
+        dir: ghs
+" > "$tr/$local/.repo/manifest.txt"
+git clone "$tr/$rem/code.git"
+
+git clone "$tr/$rem/ghs.git"
+mkdir -p "$tr/$local/restricted/code/"
+cd "$tr/$local/restricted/code/"
+git clone "$tr/$rem/restricted/code/mocana.git" mocana.ss
+git clone "$tr/$rem/restricted/code/route.git" route.ss
+cd -
+git clone "$tr/$rem/rom.git"
+git clone "$tr/$rem/tools.git"
+
+

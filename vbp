@@ -1,7 +1,65 @@
 #!/bin/bash
 
-cd /ws/alvaraju/testrepo
-
-repo create au -w /ws/alvaraju/testrepo/r
+mkdir -p /ws/${USER}/prepushtest
+cd /ws/${USER}/prepushtest
+repo delete -f /ws/${USER}/prepushtest/r
+repo create au -w /ws/${USER}/prepushtest/r
 
 cd r/code
+
+# Merge with other branch to see if CR are still checked
+#git checkout rel_jacksonville
+#git merge au HEAD~3
+#cd ..
+#~alvaraju/bin/rd vbp
+#cd -
+#cd code
+
+#git checkout au
+
+# Add commit with bad CR
+touch file1
+git add file1
+git commit -m "ParentCR#-ChildCR#: 0123456789"
+
+# Add commit with imcomplete CR
+echo "bad format CR" >> file1
+git add file1
+git commit -m "Bad Format
+
+ParentCR#-ChildCR#: 00001229-000012216"
+
+# Add commit with no CR
+echo "change" >> file1
+git add file1
+git commit -m "This is a commit with no CR"
+
+
+
+# Add merge commit
+git checkout -b topic
+echo "merge topic branch" >> file1
+git add file1
+git commit -m "merge message
+
+ParentCR#-ChildCR#: 0000121647-0000000000"
+
+git checkout au
+touch file2
+git add file2
+git commit -m "file2
+
+ParentCR#-ChildCR#: 0000121647-0000000000"
+
+git merge topic
+
+# Add file that should be ignored
+touch build/badfile.a
+git add -f build/badfile.a
+git commit -m "this is a bad file
+
+ParentCR#-ChildCR#: 0000121647-0000000000"
+
+
+cd ..
+~alvaraju/bin/rd vbp
