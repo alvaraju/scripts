@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# This script will set the remote after a git clone
+# operation is completed. The push location will
+# will be set to hpncode.rose.hp.com.
+
+# Displays usage message
+function usage {
+    echo "usage: "`basename $0`" <group>@<gitolite-server>.<domain>.hp.com:<repo> [<dir>]" 1>&2
+    exit 0
+}
+#set -x
+# Analyse parameters
+while getopts ":" optval "$@"
+do
+    case $optval in
+        "?")
+        usage $0
+        ;;
+        *)
+        echo "Unknown error while processing options"
+        exit 1
+        ;;
+    esac
+done
+
+(
+# Check that the number of parameters is correct
+if [ $# -eq 0 ] || [ $# -gt 2 ]; then
+    usage $0
+fi
+
+# Check if the user group is gitmobility, which we don't support for
+# this tool
+USER=`echo $* | awk '{print $1}' | cut -d@ -f1`
+REPO=`echo $* | awk '{print $1}' | cut -d: -f2`
+
+if [ "$(echo $REPO | grep '/pnb/software/userrepos/cache/')" != "" ]; then
+    USER=`(cd $REPO;git remote -v|grep fetch|awk '{print $2}'|cut -d'@' -f1)`
+fi
+REPO=`basename $REPO | sed s/\.git//`
+
+
+if [ $USER = gitmobility ] || [ "$(echo $REPO | grep 'mobility')" != ""  ]; then
+    REPO=`echo $* | awk '{print $1}' | cut -d: -f2`
+    echo "The $0 tool does not support the gitmobility user group."
+    echo "Use 'git clone $*' to clone the $REPO repository."
+    exit 1
+fi
+
+echo "git clone $*"
+`/pnb/software/attools/bin/git-dev/bin/git clone $1 $2 1>&2`
+if [ $? -eq 0 ]; then
+    (
+    if [ ! -z "$2" ] && [ -d "$2" ]; then  # if user choose a custom directory
+        cd $2
+    elif [ -d $REPO ]; then # if directory is called after repo name
+        cd $REPO
+    else
+        echo "error: could not set remote, repo not found." # something happened with the dir creation
+        exit 1
+    fi
+    echo "Setting the remote push url for $REPO to $USER@hpncode.rose.hp.com:$REPO"
+    `git remote set-url --push origin $USER@hpncode.rose.hp.com:$REPO 1>&2`    
+    )
+else
+    exit 1
+fi
+
+
+exit 0
+)
