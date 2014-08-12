@@ -7,9 +7,9 @@
 # Displays usage message
 function usage {
     echo "usage: "`basename $0`" <group>@<gitolite-server>.<domain>.hp.com:<repo> [<dir>]" 1>&2
-    exit 0
+    exit 1
 }
-#set -x
+
 # Analyse parameters
 while getopts ":" optval "$@"
 do
@@ -33,23 +33,34 @@ fi
 # Check if the user group is gitmobility, which we don't support for
 # this tool
 USER=`echo $* | awk '{print $1}' | cut -d@ -f1`
-REPO=`echo $* | awk '{print $1}' | cut -d: -f2`
+REPO=`echo $* | awk '{print $1}' | cut -d: -f2` 
 
 if [ "$(echo $REPO | grep '/pnb/software/userrepos/cache/')" != "" ]; then
+    if [ ! -d $REPO ]; then
+        echo "$REPO is not a valid directory"
+        exit 1
+    fi
     USER=`(cd $REPO;git remote -v|grep fetch|awk '{print $2}'|cut -d'@' -f1)`
 fi
 REPO=`basename $REPO | sed s/\.git//`
 
-
-if [ $USER = gitmobility ] || [ "$(echo $REPO | grep 'mobility')" != ""  ]; then
+if [ $USER = gitmobility ] || [ "$(echo $REPO | grep 'mobility')" != "" ]; then
     REPO=`echo $* | awk '{print $1}' | cut -d: -f2`
     echo "The $0 tool does not support the gitmobility user group."
     echo "Use 'git clone $*' to clone the $REPO repository."
     exit 1
 fi
 
-echo "git clone $*"
-`/pnb/software/attools/bin/git-dev/bin/git clone $1 $2 1>&2`
+
+if [ -e /pnb/software/attools/bin/git-dev/bin/git ]; then
+    `/pnb/software/attools/bin/git-dev/bin/git clone $1 $2 1>&2`
+elif [ -e /usr/bin/git ]; then
+    `/usr/bin/git clone $1 $2 1>&2`
+else
+    echo "Git is not installed on this system"
+    exit 1
+fi
+
 if [ $? -eq 0 ]; then
     (
     if [ ! -z "$2" ] && [ -d "$2" ]; then  # if user choose a custom directory
